@@ -6,8 +6,15 @@ import FinanceDataReader as fdr
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 import pandas as pd
+import joblib
+import os
+
+
 
 if __name__ == '__main__':
+
+    model_dir = 'models'
+    os.makedirs(model_dir, exist_ok=True)
 
     # KRX 주식 정보 get
     stocks = fdr.StockListing('KRX')
@@ -28,10 +35,19 @@ if __name__ == '__main__':
             y.append(b)
 
         train_x, test_x, train_y, test_y = train_test_split(x,y)
-        model = RandomForestRegressor()
-        model.fit(train_x, train_y)
-        score = model.score(test_x, test_y)
 
+        # 모델 경로 설정
+        model_path = os.path.join(model_dir, f'{code}_model.pkl')
+
+        # 모델 로드 또는 학습
+        if os.path.exists(model_path):
+            model = joblib.load(model_path)
+        else:
+            model = RandomForestRegressor()
+            model.fit(train_x, train_y)
+            joblib.dump(model, model_path)
+
+        score = model.score(test_x, test_y)
         today_data = df.iloc[-1].to_numpy()
         pred = model.predict([today_data])[0]
 
@@ -42,3 +58,5 @@ if __name__ == '__main__':
 
         if today_price < pred :
             print(f"{name}({code})의 현재가 {today_price:,.0f}원 -> {date}일자 주식예측가격은 {pred:,.0f}원 입니다. 오차범위는 {(1-score)*100:,.2f}% 입니다.")
+
+        joblib.dump(model, 'random_forest_model.pkl')
