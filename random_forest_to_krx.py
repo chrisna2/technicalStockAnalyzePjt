@@ -17,7 +17,7 @@ if __name__ == '__main__':
     os.makedirs(model_dir, exist_ok=True)
 
     # KRX 주식 정보 get
-    stocks = fdr.StockListing('KRX')
+    stocks = fdr.StockListing('KRX').head(10)
 
     for s in range(len(stocks)):
         code = stocks.iloc[s]['Code']
